@@ -156,6 +156,9 @@ architecture rtl of top is
   signal dir_blue            : std_logic_vector(7 downto 0);
   signal dir_pixel_column    : std_logic_vector(10 downto 0);
   signal dir_pixel_row       : std_logic_vector(10 downto 0);
+  --------------------------------------------------------------------------------------
+	 signal comb_color 				: std_logic_vector(23 downto 0);
+  signal cnt_pix 				  :std_logic_vector(15 downto 0);
 
 begin
 
@@ -168,11 +171,11 @@ begin
   graphics_lenght <= conv_std_logic_vector(MEM_SIZE*8*8, GRAPH_MEM_ADDR_WIDTH);
   
   -- removed to inputs pin
-  direct_mode <= '1';
-  display_mode     <= "10";  -- 01 - text mode, 10 - graphics mode, 11 - text & graphics
+  direct_mode <= '0';
+  display_mode     <= "01";  -- 01 - text mode, 10 - graphics mode, 11 - text & graphics
   
   font_size        <= x"1";
-  show_frame       <= '1';
+  show_frame       <= '0';
   foreground_color <= x"FFFFFF";
   background_color <= x"000000";
   frame_color      <= x"FF0000";
@@ -245,16 +248,45 @@ begin
     green_o            => green_o,
     blue_o             => blue_o     
   );
-  
+  ------------------------------------------------
+  reg_i:reg
+  port map(
+		i_clk  => pix_clock_s,
+		in_rst => rst_i,
+		i_d    => cnt_pix,
+		o_q    => char_adress
+	);
+--------------------------------------------------  
   -- na osnovu signala iz vga_top modula dir_pixel_column i dir_pixel_row realizovati logiku koja genereise
   --dir_red
   --dir_green
   --dir_blue
+  	comb_color <= x"ffffff" when (dir_pixel_column<80) else 
+						x"ff00ff" when ((dir_pixel_column<160)) else 
+						x"ff0000" when ((dir_pixel_column<240)) else 
+						x"00ff00" when ((dir_pixel_column<320)) else
+						x"ffff00" when ((dir_pixel_column<400)) else
+						x"00ffff" when ((dir_pixel_column<480)) else
+						x"000000" when (dir_pixel_column<560) else 
+						x"0000ff"; --when ((dir_pixel_column=>480) and(dir_pixel_column<560)) ;
+	
+	dir_red <= comb_color(23 downto 16);
+	dir_green <= comb_color(15 downto 8 );
+	dir_blue <= comb_color(7 downto 0);
  
   -- koristeci signale realizovati logiku koja pise po TXT_MEM
   --char_address
   --char_value
   --char_we
+	char_we<='1';
+		
+		char_value<="00" & x"1" when char_address = "00000000000000" else	-- A
+						"00" & x"C" when char_address = "00000000000001" else	-- L
+						"00" & x"C" when char_address = "00000000000010" else	-- L
+			
+				
+		
+		end process;
   
   -- koristeci signale realizovati logiku koja pise po GRAPH_MEM
   --pixel_address
