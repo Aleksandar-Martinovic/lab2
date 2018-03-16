@@ -170,9 +170,11 @@ end component reg;
   signal dir_pixel_column    : std_logic_vector(10 downto 0);
   signal dir_pixel_row       : std_logic_vector(10 downto 0);
   --------------------------------------------------------------------------------------
-	signal comb_color 				: std_logic_vector(23 downto 0);
-	signal char_address_next 				  :std_logic_vector(MEM_ADDR_WIDTH-1 downto 0);
-
+	signal comb_color 			: std_logic_vector(23 downto 0);
+	signal char_address_next 	:std_logic_vector(MEM_ADDR_WIDTH-1 downto 0);
+	signal start_ptr				: std_logic_vector(MEM_ADDR_WIDTH-1 downto 0);
+	signal clk_cnt					: std_logic_vector(31 downto 0);
+------------------------------------------------------------------------------------------
 begin
 
   -- calculate message lenght from font size
@@ -297,26 +299,51 @@ begin
 	
 	char_address_next <= char_address + 1  when (char_address < "01001011000000") else -- 0001001011000000 = 4800    		
 								(others => '0');
-
+	
 		
-		char_value<= "000001" when char_address = 0 else    --A
-						"001100" when char_address = 1 else    --L
-						"000101" when char_address = 2 else    --E
-						"001011" when char_address = 3 else    --K
-						"010011" when char_address = 4 else    --S
-						"000001" when char_address = 5 else    --A
-						"001110" when char_address = 6 else    --N
-						"000100" when char_address = 7 else    --D
-						"000001" when char_address = 8 else    --A
-						"010010" when char_address = 9 else    --R
-						"100000" when char_address = 10 else    --_
-						"010100" when char_address = 11 else    --T
-						"000101" when char_address=12 else --E
-						"001110" when char_address = 13 else -- N
-						"000100" when char_address = 14 else -- D
-						"001010" when char_address = 15 else -- J
-						"000101" when char_address = 16 else	-- E
-						 "010010" when char_address = 17 else -- R
+		process(pix_clock_s,reset_n_i)
+		begin
+			if reset_n_i = '0' then	
+				clk_cnt <= (others => '0');
+			elsif rising_edge(pix_clock_s) then
+				if(clk_cnt = "00000010111110101111000001111111") then
+					clk_cnt <= (others => '0');
+				else 
+					clk_cnt <= clk_cnt + 1;	
+				end if;
+			end if;
+		end process;
+		
+		
+		process(pix_clock_s,reset_n_i)
+		begin
+			if reset_n_i = '0' then	
+				start_ptr <= (others => '0');
+			elsif rising_edge(pix_clock_s) then
+				if(clk_cnt = "00000010111110101111000001111111") then
+					start_ptr <= start_ptr + 1;
+				end if;
+			end if;
+		end process;
+		
+		char_value<= "000001" when (char_address = (0 + start_ptr)) else    --A
+						"001100" when char_address = (1 + start_ptr) else    --L
+						"000101" when char_address = (2 + start_ptr) else    --E
+						"001011" when char_address = (3 + start_ptr) else    --K
+						"010011" when char_address = (4 + start_ptr) else    --S
+						"000001" when char_address = (5 + start_ptr) else    --A
+						"001110" when char_address = (6 + start_ptr) else    --N
+						"000100" when char_address = (7 + start_ptr) else    --D
+						"000001" when char_address = (8 + start_ptr) else    --A
+						"010010" when char_address = (9 + start_ptr) else    --R
+						"100000" when char_address =  (10 + start_ptr) else    --_
+						"010100" when char_address = (11 + start_ptr) else    --T
+						"000101" when char_address=  (12 + start_ptr) else --E
+						"001110" when char_address =  (13 + start_ptr) else -- N
+						"000100" when char_address =  (14 + start_ptr) else -- D
+						"001010" when char_address =  (15 + start_ptr) else -- J
+						"000101" when char_address = (16 + start_ptr) else	-- E
+						"010010" when char_address =  (17 + start_ptr) else -- R
 						"100000";--Donja crta
 				
 		
