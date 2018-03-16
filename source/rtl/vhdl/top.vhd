@@ -275,78 +275,78 @@ begin
 						x"ffff00" when ((dir_pixel_column<400)) else
 						x"00ffff" when ((dir_pixel_column<480)) else
 						x"000000" when (dir_pixel_column<560) else 
-						x"0000ff"; --when ((dir_pixel_column=>480) and(dir_pixel_column<560)) ;
+						x"0000ff";
 	
-	dir_red 		<= x"FF";--comb_color(23 downto 16);
-	dir_green 	<= x"00";--comb_color(15 downto 8 );
-	dir_blue 	<= x"FF";--comb_color(7 downto 0);
+	dir_red 		<= comb_color(23 downto 16);
+	dir_green 	<= comb_color(15 downto 8 );
+	dir_blue 	<= comb_color(7 downto 0);
  
   -- koristeci signale realizovati logiku koja pise po TXT_MEM
   --char_address
   --char_value
   --char_we
 	char_we<='1';
-	
-	  ------------------------------------------------
+
   reg_i:reg
   port map(
 		i_clk  => pix_clock_s,
 		in_rst => reset_n_i,
 		i_d    => char_address_next,
 		o_q    => char_address
-	);
---------------------------------------------------  
+	); 
 	
-	char_address_next <= char_address + 1  when (char_address < "01001011000000") else -- 0001001011000000 = 4800    		
+	char_address_next <= char_address + 1  when (char_address < "01001011000000") else  		
 								(others => '0');
 	
-		
-		process(pix_clock_s,reset_n_i)
-		begin
-			if reset_n_i = '0' then	
+	process(pix_clock_s,reset_n_i)
+	begin
+		if reset_n_i = '0' then	
+			clk_cnt <= (others => '0');
+		elsif rising_edge(pix_clock_s) then
+			if(clk_cnt = "00000010111110101111000001111111") then
 				clk_cnt <= (others => '0');
-			elsif rising_edge(pix_clock_s) then
-				if(clk_cnt = "00000010111110101111000001111111") then
-					clk_cnt <= (others => '0');
-				else 
-					clk_cnt <= clk_cnt + 1;	
-				end if;
+			else 
+				clk_cnt <= clk_cnt + 1;	
 			end if;
-		end process;
-		
-		
-		process(pix_clock_s,reset_n_i)
-		begin
-			if reset_n_i = '0' then	
-				start_ptr <= (others => '0');
-			elsif rising_edge(pix_clock_s) then
-				if(clk_cnt = "00000010111110101111000001111111") then
-					start_ptr <= start_ptr + 1;
-				end if;
+		end if;
+	end process;
+	
+	
+	process(pix_clock_s,reset_n_i)
+	begin
+		if reset_n_i = '0' then	
+			start_ptr <= (others => '0');
+		elsif rising_edge(pix_clock_s) then
+			if(clk_cnt = "00000010111110101111000001111111") then
+				start_ptr <= start_ptr + 1;
 			end if;
-		end process;
-		
-		char_value<= "000001" when (char_address = (0 + start_ptr)) else    --A
-						"001100" when char_address = (1 + start_ptr) else    --L
-						"000101" when char_address = (2 + start_ptr) else    --E
-						"001011" when char_address = (3 + start_ptr) else    --K
-						"010011" when char_address = (4 + start_ptr) else    --S
-						"000001" when char_address = (5 + start_ptr) else    --A
-						"001110" when char_address = (6 + start_ptr) else    --N
-						"000100" when char_address = (7 + start_ptr) else    --D
-						"000001" when char_address = (8 + start_ptr) else    --A
-						"010010" when char_address = (9 + start_ptr) else    --R
-						"100000" when char_address =  (10 + start_ptr) else    --_
-						"010100" when char_address = (11 + start_ptr) else    --T
-						"000101" when char_address=  (12 + start_ptr) else --E
-						"001110" when char_address =  (13 + start_ptr) else -- N
-						"000100" when char_address =  (14 + start_ptr) else -- D
-						"001010" when char_address =  (15 + start_ptr) else -- J
-						"000101" when char_address = (16 + start_ptr) else	-- E
-						"010010" when char_address =  (17 + start_ptr) else -- R
-						"100000";--Donja crta
-				
-		
+		end if;
+	end process;
+	
+	char_value<= "000001" when (char_address = (0 + start_ptr)) else--A
+					 "001100" when char_address = (1 + start_ptr) else  --L
+					 "000101" when char_address = (2 + start_ptr) else  --E
+					 "001011" when char_address = (3 + start_ptr) else  --K
+					 "010011" when char_address = (4 + start_ptr) else  --S
+					 "000001" when char_address = (5 + start_ptr) else  --A
+					 "001110" when char_address = (6 + start_ptr) else  --N
+					 "000100" when char_address = (7 + start_ptr) else  --D
+					 "000001" when char_address = (8 + start_ptr) else  --A
+					 "010010" when char_address = (9 + start_ptr) else  --R
+					 "100000" when char_address = (10 + start_ptr) else --RAZMAK
+					 "001101" when char_address = (11 + start_ptr) else --M
+					 "000001" when char_address = (12 + start_ptr) else --A
+					 "010010" when char_address = (13 + start_ptr) else --R
+					 "010100" when char_address = (14 + start_ptr) else --T
+					 "001001" when char_address = (15 + start_ptr) else --I
+					 "001110" when char_address = (16 + start_ptr) else --N
+					 "001111" when char_address = (17 + start_ptr) else --O
+					 "010110" when char_address = (18 + start_ptr) else --V
+					 "001001" when char_address = (19 + start_ptr) else --I
+					 "000011" when char_address = (20 + start_ptr) else --C
+					 "100000";
+			
+	
   
   -- koristeci signale realizovati logiku koja pise po GRAPH_MEM
   --pixel_address
