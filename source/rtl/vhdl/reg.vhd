@@ -26,7 +26,7 @@ begin
 	
 	process(i_clk, in_rst)
 	begin
-		if in_rst = '1' then
+		if in_rst = '0' then
 			r_q <= conv_std_logic_vector(RST_INIT, WIDTH);
 		elsif rising_edge(i_clk) then --rising_edge=(clk'event and clk='1') 
 			r_q <= i_d;

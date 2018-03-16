@@ -38,6 +38,19 @@ end top;
 
 architecture rtl of top is
 
+	component reg is
+	generic(
+		WIDTH    : positive := 14;
+		RST_INIT : integer := 0
+	);
+	port(
+		i_clk  : in  std_logic;
+		in_rst : in  std_logic;
+		i_d    : in  std_logic_vector(WIDTH-1 downto 0);
+		o_q    : out std_logic_vector(WIDTH-1 downto 0)
+	);
+end component reg;
+
   constant RES_NUM : natural := 6;
 
   type t_param_array is array (0 to RES_NUM-1) of natural;
@@ -157,8 +170,8 @@ architecture rtl of top is
   signal dir_pixel_column    : std_logic_vector(10 downto 0);
   signal dir_pixel_row       : std_logic_vector(10 downto 0);
   --------------------------------------------------------------------------------------
-	 signal comb_color 				: std_logic_vector(23 downto 0);
-  signal cnt_pix 				  :std_logic_vector(15 downto 0);
+	signal comb_color 				: std_logic_vector(23 downto 0);
+	signal char_address_next 				  :std_logic_vector(MEM_ADDR_WIDTH-1 downto 0);
 
 begin
 
@@ -248,15 +261,7 @@ begin
     green_o            => green_o,
     blue_o             => blue_o     
   );
-  ------------------------------------------------
-  reg_i:reg
-  port map(
-		i_clk  => pix_clock_s,
-		in_rst => rst_i,
-		i_d    => cnt_pix,
-		o_q    => char_adress
-	);
---------------------------------------------------  
+
   -- na osnovu signala iz vga_top modula dir_pixel_column i dir_pixel_row realizovati logiku koja genereise
   --dir_red
   --dir_green
@@ -270,23 +275,51 @@ begin
 						x"000000" when (dir_pixel_column<560) else 
 						x"0000ff"; --when ((dir_pixel_column=>480) and(dir_pixel_column<560)) ;
 	
-	dir_red <= comb_color(23 downto 16);
-	dir_green <= comb_color(15 downto 8 );
-	dir_blue <= comb_color(7 downto 0);
+	dir_red 		<= x"FF";--comb_color(23 downto 16);
+	dir_green 	<= x"00";--comb_color(15 downto 8 );
+	dir_blue 	<= x"FF";--comb_color(7 downto 0);
  
   -- koristeci signale realizovati logiku koja pise po TXT_MEM
   --char_address
   --char_value
   --char_we
 	char_we<='1';
+	
+	  ------------------------------------------------
+  reg_i:reg
+  port map(
+		i_clk  => pix_clock_s,
+		in_rst => reset_n_i,
+		i_d    => char_address_next,
+		o_q    => char_address
+	);
+--------------------------------------------------  
+	
+	char_address_next <= char_address + 1  when (char_address < "01001011000000") else -- 0001001011000000 = 4800    		
+								(others => '0');
+
 		
-		char_value<="00" & x"1" when char_address = "00000000000000" else	-- A
-						"00" & x"C" when char_address = "00000000000001" else	-- L
-						"00" & x"C" when char_address = "00000000000010" else	-- L
-			
+		char_value<= "000001" when char_address = 0 else    --A
+						"001100" when char_address = 1 else    --L
+						"000101" when char_address = 2 else    --E
+						"001011" when char_address = 3 else    --K
+						"010011" when char_address = 4 else    --S
+						"000001" when char_address = 5 else    --A
+						"001110" when char_address = 6 else    --N
+						"000100" when char_address = 7 else    --D
+						"000001" when char_address = 8 else    --A
+						"010010" when char_address = 9 else    --R
+						"100000" when char_address = 10 else    --_
+						"010100" when char_address = 11 else    --T
+						"000101" when char_address=12 else --E
+						"001110" when char_address = 13 else -- N
+						"000100" when char_address = 14 else -- D
+						"001010" when char_address = 15 else -- J
+						"000101" when char_address = 16 else	-- E
+						 "010010" when char_address = 17 else -- R
+						"100000";--Donja crta
 				
 		
-		end process;
   
   -- koristeci signale realizovati logiku koja pise po GRAPH_MEM
   --pixel_address
